@@ -27,9 +27,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/flupke/markzoterodown"
-Repository = "https://github.com/flupke/markzoterodown"
-Issues = "https://github.com/flupke/markzoterodown/issues"
+Homepage = "https://github.com/flol3622/markzoterodown"
+Repository = "https://github.com/flol3622/markzoterodown"
+Issues = "https://github.com/flol3622/markzoterodown/issues"
 
 # This entry point is what lets `uvx markzoterodown` work directly.
 [project.scripts]
