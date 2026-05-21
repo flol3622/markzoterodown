@@ -1,5 +1,9 @@
 # markzoterodown
 
+<p align="center">
+  <img src="docs/assets/markzoterodown-logo.png" alt="markzoterodown logo" width="180">
+</p>
+
 [![PyPI](https://img.shields.io/pypi/v/markzoterodown)](https://pypi.org/project/markzoterodown/)
 [![Python](https://img.shields.io/pypi/pyversions/markzoterodown)](https://pypi.org/project/markzoterodown/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -11,6 +15,10 @@ It complements the [zotero-remote MCP](https://github.com/flol3622/markzoterodow
 — which lets you search and browse your library — by resolving the local file
 path of any attachment and converting it to Markdown via
 [MarkItDown](https://github.com/microsoft/markitdown).
+
+## Architecture
+
+![Architecture diagram](docs/architecture.excalidraw.png)
 
 ## Tools
 
