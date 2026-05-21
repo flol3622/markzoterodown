@@ -8,126 +8,112 @@
 [![Python](https://img.shields.io/pypi/pyversions/markzoterodown)](https://pypi.org/project/markzoterodown/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An MCP server that gives Claude (or any MCP client) **full-text Markdown access**
-to files attached to your Zotero library items.
+An MCP server that gives AI agents **full-text Markdown access** to files
+attached to your Zotero library items.
 
-It complements the [zotero-remote MCP](https://github.com/flol3622/markzoterodown)
-— which lets you search and browse your library — by resolving the local file
-path of any attachment and converting it to Markdown via
+markzoterodown handles the attachment content layer: it resolves Zotero
+attachment paths on disk and converts PDFs, DOCX files, PPTX files, HTML, and
+other formats to Markdown with
 [MarkItDown](https://github.com/microsoft/markitdown).
 
-## Architecture
-
-![Architecture diagram](docs/architecture.excalidraw.png)
+Use it with a Zotero search/browse MCP server: search for an item key there,
+then read its attached files here.
 
 ## Tools
 
 | Tool | Description |
 |---|---|
-| `list_item_attachments` | List all file attachments for a Zotero item (key, filename, MIME type, local path) |
-| `get_attachment_as_markdown` | Convert an attachment (PDF, DOCX, PPTX, HTML, …) to full-text Markdown |
+| `list_item_attachments` | List file attachments for a Zotero item, including attachment keys, filenames, MIME types, link modes, and resolved local paths. |
+| `get_attachment_as_markdown` | Convert a Zotero attachment to Markdown. Supports local Zotero files and `linked_url` attachments. |
 
-## Typical workflow
+## Quick Start
 
-```
-zotero_search("gypsum sorption")           ← zotero-remote MCP
-  → item key: BZPBTWVU
-
-list_item_attachments("BZPBTWVU")          ← this server
-  → attachment key: AE7VF5JI
-     filename: Wilkes 2004.pdf
-
-get_attachment_as_markdown("AE7VF5JI")     ← this server
-  → full Markdown text of the paper
-```
-
-## Installation
-
-No cloning or manual installs needed. Uses [`uvx`](https://docs.astral.sh/uv/)
-to pull the package from PyPI into an isolated environment on first run:
+Install nothing manually. Most MCP clients can run the PyPI package directly:
 
 ```bash
-uvx markzoterodown   # that's it
+uvx markzoterodown
 ```
 
-## Setup
+The universal MCP values are:
 
-### 1. Get your Zotero credentials
+| Field | Value |
+|---|---|
+| Server name | `zotero-fulltext` |
+| Command | `uvx` |
+| Arguments | `markzoterodown` |
+| Required env | `ZOTERO_LIBRARY_ID`, plus `ZOTERO_API_KEY` unless using `ZOTERO_USE_LOCAL=true` |
 
-Go to [zotero.org/settings/keys](https://www.zotero.org/settings/keys):
+For copy-paste setup across Claude, Codex, Cursor, Gemini CLI, Windsurf,
+VS Code, OpenCode, MetaMCP, and other clients, see:
 
-- Your **library ID** is the number shown under "Your userID for use in API calls"
-- Click **Create new private key** to generate an API key
+**[Agent setup guide](docs/setup.md)**
 
-### 2. Add to Claude Desktop / Claude Code
+## Zotero Credentials
 
-Edit your `claude_desktop_config.json`:
+For the Zotero web API, open
+[zotero.org/settings/keys](https://www.zotero.org/settings/keys):
 
-```json
-{
-  "mcpServers": {
-    "zotero-fulltext": {
-      "command": "uvx",
-      "args": ["markzoterodown"],
-      "env": {
-        "ZOTERO_LIBRARY_ID": "<your numeric user ID>",
-        "ZOTERO_API_KEY":    "<your API key>"
-      }
-    }
-  }
-}
+- `ZOTERO_LIBRARY_ID`: the number under "Your userID for use in API calls"
+- `ZOTERO_API_KEY`: create a private key with library read access
+- `ZOTERO_LIBRARY_TYPE`: use `user` or `group`
+
+For Zotero Desktop's local API, enable local API access in Zotero and set:
+
+```text
+ZOTERO_USE_LOCAL=true
+ZOTERO_LIBRARY_ID=<your user or group ID>
 ```
 
-On **macOS** the config file lives at:
-`~/Library/Application Support/Claude/claude_desktop_config.json`
-
-Restart Claude after saving.
+The local API requires Zotero Desktop to be running.
 
 ## Configuration
 
-All configuration is via environment variables:
+All runtime configuration is via environment variables:
 
 | Variable | Default | Description |
 |---|---|---|
-| `ZOTERO_LIBRARY_ID` | *(required)* | Numeric Zotero user or group ID |
-| `ZOTERO_API_KEY` | `""` | Zotero API key |
-| `ZOTERO_LIBRARY_TYPE` | `user` | `user` or `group` |
-| `ZOTERO_USE_LOCAL` | `false` | Set `true` to use the Zotero local API (port 23119) instead of the web API — requires enabling it in Zotero → Settings → Advanced |
-| `ZOTERO_STORAGE_PATH` | `~/Zotero/storage` | Path where Zotero stores synced attachment files |
+| `ZOTERO_LIBRARY_ID` | required | Numeric Zotero user or group ID. |
+| `ZOTERO_API_KEY` | `""` | Zotero API key. Usually omitted when using the local API. |
+| `ZOTERO_LIBRARY_TYPE` | `user` | Use `user` or `group`. |
+| `ZOTERO_USE_LOCAL` | `false` | Set `true` to use Zotero Desktop's local API on port 23119. |
+| `ZOTERO_STORAGE_PATH` | `~/Zotero/storage` | Directory where Zotero stores synced attachment files. |
+
+## Workflow
+
+```text
+zotero_search("gypsum sorption")          # another Zotero MCP
+  -> item key: BZPBTWVU
+
+list_item_attachments("BZPBTWVU")         # this server
+  -> attachment key: AE7VF5JI
+     filename: Wilkes 2004.pdf
+
+get_attachment_as_markdown("AE7VF5JI")    # this server
+  -> full Markdown text of the paper
+```
+
+## Architecture
+
+![Architecture diagram](docs/architecture.excalidraw.png)
 
 ## Troubleshooting
 
-**"File not found" error**  
-The attachment exists in Zotero but hasn't been downloaded locally. Open Zotero,
-right-click the item → *Find Available PDF* or *Download PDF*. The file must be
-present in `ZOTERO_STORAGE_PATH` on this machine.
+- If your MCP client cannot find `uvx`, use the absolute path from `which uvx`
+  or `where.exe uvx`.
+- If an attachment returns "file not found", download/sync the file in Zotero
+  on the same machine that runs the MCP server.
+- If the Zotero API returns `403`, regenerate your API key with library read
+  access.
+- For group libraries, set `ZOTERO_LIBRARY_TYPE=group` and use the group's
+  numeric ID.
 
-**403 from the Zotero API**  
-Your API key doesn't have read access. Regenerate it at
-[zotero.org/settings/keys](https://www.zotero.org/settings/keys) and make sure
-"Allow library access" is checked.
-
-**`ZOTERO_LIBRARY_ID` not set**  
-The server will return a clear error message. Add the env var to your MCP config.
-
-**Using a Zotero group library**  
-Set `ZOTERO_LIBRARY_TYPE=group` and use the group's numeric ID (visible in its
-URL on zotero.org).
+More client-specific notes are in the
+**[agent setup guide](docs/setup.md#troubleshooting)**.
 
 ## Development
 
-```bash
-git clone https://github.com/flol3622/markzoterodown
-cd markzoterodown
-uv sync
-
-# verify tools register
-uv run python -c "from markzoterodown.server import mcp; print([t.name for t in mcp._tool_manager.list_tools()])"
-
-# build + publish
-uv build
-uv publish --token pypi-...
-```
+Contributor setup, local checkout MCP config, build, publish, and release notes
+live in the **[development guide](docs/development.md)**.
 
 ## License
 
